@@ -1,0 +1,780 @@
+---
+title: "3D Visualization and Analysis"
+author: "Maria Codlin, Julie Jung, Zach Coto"
+date: "November 28, 2017"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 6
+    toc_float: true
+---
+
+# Welcome, friends! 
+
+Please go forth and scroll down to begin your journey though our group module assignment for AN 597. 
+
+## Background 
+
+R has three distinct graphics systems: (1) the base R graphics system, (2) the grid graphics system and (3) ggplot2. There is considerable overlap of the functionality of R’s three graphics systems. ggplot2 is currently probably the most popular R package for doing presentation quality plots.
+
+## Plotting 3D surfaces
+
+(1) In the base R graphics system: 
+
+### persp() function
+
+The function persp() draws perspective plots of a surface over the x–y plane. 
+Uncomment to run demo(persp). The demo will give you an idea of what this function can do. 
+
+```{r}
+# demo(persp)
+```
+
+A demo is an .R file that lives in demo/ . Demos are like examples but tend to be longer. We can use the following line of code to check which packages have demo(). 
+
+```{r}
+demo(package=.packages(all.available = TRUE))
+```
+
+### {plot3D} package 
+
+The plot3D package builds on on persp() to provide functions for both 2D and 3D plotting. Load the plot3D package and uncomment go through some pretty impressive plot examples:
+
+```{r}
+#install.packages("plot3D")
+library("plot3D")
+
+#example(surf3D) #examples of 3D surfaces
+#example(persp3D) 
+```
+
+Let's do an example on our own. Use surf3D() to create a cut-away view of a Torus.
+
+```{r}
+# 3D Plot of Half of a Torus
+par(mar = c(2, 2, 2, 2))
+par(mfrow = c(1, 1))
+R <- 3
+r <- 2
+x <- seq(0, 2*pi,length.out=50)
+y <- seq(0, pi,length.out=50)
+M <- mesh(x, y)
+ 
+alpha <- M$x
+beta <- M$y
+
+surf3D(x = (R + r*cos(alpha)) * cos(beta),
+       y = (R + r*cos(alpha)) * sin(beta),
+       z = r * sin(alpha),
+       colkey=FALSE,
+       bty="b2",
+       main="Half of a Torus")
+```
+
+Pretty cool, right? :D We can use these functions to create any 3D surface we can imagine. 
+
+## Plotting 3D scatter plots 
+
+It turns out there are SO MANY ways to create a 3D scatterplot, and (to me at least) all of them seem really useful and elegant. As you'll see, there are pros and cons to each method - which you should use depends on what function you're plotting for. I'll go over some non-interactive plotting functions and then some interactive ones. 
+
+
+### {scatterplot3d} package 
+
+The scatterplot3d package is the "go-to" package for simple non-interactive 3D scatter plots. 
+
+Load this package and uncomment to go through some examples of spirals, surfaces and 3D scatterplots: 
+```{r}
+#install.packages("scatterplot3d") # Install
+library("scatterplot3d") # load
+
+#example(scatterplot3d) 
+```
+This [link](http://www.sthda.com/english/wiki/scatterplot3d-3d-graphics-r-software-and-data-visualization) is really helpful if you want more information and detail about using scatterplot3d to create 3d plots. 
+
+### {lattice} package 
+
+The lattice package has its own distinctive look. Once you see one lattice plot it should be pretty easy to distinguish plots made with this package from base graphics plots. Load the package and use an example to see a 3D graph of a volcano, and 3D surface and scatter plots.
+
+```{r}
+library(lattice)
+#example(cloud)
+```
+
+### {rgl} package 
+
+I've gone over sctterplot3d and lattice fairly quickly and with no examples of my own. This is because I mainly want to focus on how to create *interactive* 3D visualizations. The first way to do this that I'll show you is with rgl. 
+
+rgl is a 3D graphics package that producesreal-time interactive 3D plots. It allows you to interactively rotate, zoom, and select regions of your graphic. 
+
+Note that an rgl plot can be manually rotated by holding down on the mouse or touchpad. It can be also zoomed using the scroll wheel on a mouse or pressing ctrl + using the touchpad on a PC or two fingers (up or down) on a mac.
+
+Let's first install the packages that you'll need for this section: 
+```{r}
+#install.packages("rgl") # install
+#install.packages("car") 
+library("rgl") #load
+library("car")
+```
+
+#### Prepare the data
+
+Let's take a look at the iris dataset: 
+
+```{r}
+data(iris)
+head(iris)
+```
+
+Recall that the iris data set gives the measurements of the variables sepal length and width, petal length and width, respectively, for 50 flowers from each of 3 species of iris. The species are Iris setosa, versicolor, and virginica.
+
+We'll use this dataset for the following examples. First we'll assign measurements of the variables sepal length, petal length, and sepal width.
+
+```{r}
+x <- sep.l <- iris$Sepal.Length
+y <- pet.l <- iris$Petal.Length
+z <- sep.w <- iris$Sepal.Width
+```
+
+#### Start and close the RGL device
+To make a 3d plot with rgl, you should first start the rgl device in R. You can use the following function to manage the rgl device. 
+
+* rgl.open(): Opens a new device
+* rgl.close(): Closes the current device
+* rgl.clear(): Clears the current device
+* rgl.cur(): Returns the active device ID
+* rgl.quit(): Shutdowns the RGL device system
+
+You don't necessarily need to use open a new RGL device for each plot. 
+
+Here we'll create a scatter plot using rgl, in 2 different ways:
+
+#### scatter3d()
+
+First, the function scatter3d() uses the rgl package to draw a 3D scatter plot with various regression planes. 
+
+```{r}
+#rgl.open() #opens a new rgl device. 
+scatter3d(x = sep.l, y = pet.l, z = sep.w, 
+          xlab = "Sepal Length (cm)", ylab = "Petal Length (cm)",
+          zlab = "Sepal Width (cm)")
+```
+x, y, z are respectively the coordinates of points to be plotted. The arguments y and z can be optional depending on the structure of x.
+
+Note that you can drag and drop to spin this plot around and view it from different angles. 
+
+We can change the colors of the point and remove the regression surface:
+```{r}
+scatter3d(x = sep.l, y = pet.l, z = sep.w,
+        point.col = "blue", surface=FALSE, 
+        xlab = "Sepal Length (cm)", ylab = "Petal Length (cm)",
+        zlab = "Sepal Width (cm)")
+```
+
+We can also use the format:
+
+> scatter3d(formula, data)
+
+Where formula is a model formula of form y ~ x + z and data is the data frame within which to evaluate the formula. If you want to plot the points by groups, you can use y ~ x + z | g where g is a factor dividing the data into groups
+
+This is an example where we plot the points by groups:
+```{r}
+scatter3d(x = sep.l, y = pet.l, z = sep.w, groups = iris$Species, 
+          xlab = "Sepal Length (cm)", ylab = "Petal Length (cm)",
+          zlab = "Sepal Width (cm)")
+```
+
+We can remove the grids:
+```{r}
+scatter3d(x = sep.l, y = pet.l, z = sep.w, groups = iris$Species,
+          xlab = "Sepal Length (cm)", ylab = "Petal Length (cm)",
+          zlab = "Sepal Width (cm)",
+          grid = FALSE)
+```
+
+The display of the surface(s) can be changed using the argument fit. Possible values for fit are “linear”, “quadratic”, “smooth” and “additive”
+
+```{r}
+scatter3d(x = sep.l, y = pet.l, z = sep.w, groups = iris$Species,
+          xlab = "Sepal Length (cm)", ylab = "Petal Length (cm)",
+          zlab = "Sepal Width (cm)", 
+          grid = FALSE, fit = "smooth")
+```
+
+We can remove surfaces as before (argument surface = FALSE), and add concentration ellipsoids. 
+
+```{r}
+scatter3d(x = sep.l, y = pet.l, z = sep.w, groups = iris$Species,
+          xlab = "Sepal Length (cm)", ylab = "Petal Length (cm)",
+          zlab = "Sepal Width (cm)",
+          surface=FALSE, ellipsoid = TRUE)
+rgl.close()
+```
+
+##### Export images
+
+The function rgl.snapshot() will save the screenshot as a png. 
+
+```{r}
+#rgl.snapshot(filename="plot.png")
+```
+
+The function rgl.postscript() will save the screenshot to a file in ps, eps, tex, pdf, svg, or pgf form. 
+
+For example, 
+
+```{r}
+#rgl.postscript("plot.pdf", fmt="pdf")
+```
+
+#### rgl.points()
+
+The function rgl.points() is used to draw a basic 3D scatter plot:
+```{r}
+rgl.open() # Open a new RGL device
+rgl.bg(color = "white") # Setup the background color
+rgl.points(x, y, z, color ="blue", size =5) # Scatter plot
+rgl.spheres(x, y, z, r = 0.2, color = "grey") # change the shape of points to spheres with center (x, y, z) and radius r. 
+rgl.bbox(color = "#333377") # Add bounding box decoration
+rgl.close()
+```
+
+Some extra formatting tools for rgl.bbox are:
+1. xlen, ylen, zlen: values specifying the number of tickmarks on x, y and Z axes, respectively
+2. marklen: value specifying the length of the tickmarks
+3. …: other rgl material properties (see ?rgl.material) including:
+4. color: a vector of colors. The first color is used for the background color of the bounding box. The second color is used for the tick mark labels.
+5. emission, specular, shininess: properties for lighting calculation
+6. alpha: value specifying the color transparency. The value should be between 0.0 (fully transparent) and 1.0 (opaque)
+
+
+##### Label points interactively with the mouse
+
+The function identify3d(), within the {car} package allows you to label points interactively with the mouse. 
+```{r}
+rgl.open() # Open a new RGL device
+rgl.bg(color = "white") # Setup the background color
+rgl.points(x, y, z, color ="blue", size =5) # Scatter plot
+# identify3d(x = sep.l, y = pet.l, z = sep.w, labels=row.names(iris), buttons=c("left", "right"))
+```
+Using "buttons", I've set it so that you use left click to pick points and right click to exit. You can set it differently if you wish. You can also choose different labels - currently, it is set to displace the row name of the point you pick. 
+
+##### We can add axis lines and labels
+
+For the function rgl.lines(), the arguments x, y, and z are numeric vectors of length 2 (i.e, : x = c(x1,x2), y = c(y1, y2), z = c(z1, z2) ).
+
+The values x1, y1 and y3 are the 3D coordinates of the line starting point.
+The values x2, y2 and y3 corresponds to the 3D coordinates of the line ending point.
+
+```{r}
+# Make a scatter plot
+rgl.open() 
+rgl.spheres(x, y, z, r = 0.2, color = "yellow") 
+# Add x, y, and z Axes
+rgl.lines(c(min(x), max(x)), c(0, 0), c(0, 0), color = "black")
+rgl.lines(c(0, 0), c(min(y),max(y)), c(0, 0), color = "red")
+rgl.lines(c(0, 0), c(0, 0), c(min(z),max(z)), color = "green")
+```
+
+As you can see, the axes are drawn but the problem is that they don’t cross at the point c(0, 0, 0)
+
+There are two solutions to handle this situation:
+
+1. Scale the data to make things easy. Transform the x, y and z variables so that their min = 0 and their max = 1
+2. Use c(-max, +max) as the ranges of the axes
+
+###### First, we can scale the data: 
+
+```{r}
+x1 <- (x - min(x))/(max(x) - min(x))
+y1 <- (y - min(y))/(max(y) - min(y))
+z1 <- (z - min(z))/(max(z) - min(z))
+```
+
+```{r}
+# Make a scatter plot
+rgl.open() 
+rgl.spheres(x1, y1, z1, r = 0.02, color = "yellow") 
+# Add x, y, and z Axes
+rgl.lines(c(0, 1), c(0, 0), c(0, 0), color = "black")
+rgl.lines(c(0, 0), c(0,1), c(0, 0), color = "red")
+rgl.lines(c(0, 0), c(0, 0), c(0,1), color = "green")
+```
+
+###### OR, we can use c(-max,max)
+
+This helper function will help us calculate the axis limits:
+```{r}
+lim <- function(x){c(-max(abs(x)), max(abs(x))) * 1.1}
+```
+
+```{r}
+# Make a scatter plot
+rgl.open() 
+rgl.spheres(x, y, z, r = 0.2, color = "yellow") 
+# Add x, y, and z Axes
+rgl.lines(lim(x), c(0, 0), c(0, 0), color = "black")
+rgl.lines(c(0, 0), lim(y), c(0, 0), color = "red")
+rgl.lines(c(0, 0), c(0, 0), lim(z), color = "green")
+```
+
+#### CHALLENGE 1
+
+Create a custom function called "rgl_add_axes()" to add x, y, and z axes. 
+This function should take in x, y, and z; have axis.col be "grey" as default; include xlab, ylab, and zlab; have default option show.plane as "TRUE" (to add the axis planes); have show.bbox have default as "FALSE" (to add the bounding box decoration); and have bbox.col determine the bounding box colors (having the first color as the background color and the second color as the color of tick marks). 
+
+Hints: The function rgl.texts(x, y, z, text ) is used to add texts to an RGL plot. Also, rgl.quads(x, y, z) is used to add planes. x, y and z are numeric vectors of length four specifying the coordinates of the four nodes of the quad.
+
+Answer to this challenge can be found [here](http://www.sthda.com/english/wiki/a-complete-guide-to-3d-visualization-device-system-in-r-r-software-and-data-visualization).
+
+
+## Use rgl to create a surface animation of the globe 
+
+Here we'll use the persp3d() function within {rgl} to create a surface animation of the globe. 
+
+First provide formulas for the latitutde and longitude. 
+```{r}
+lat <- matrix(seq(90, -90, len = 50)*pi/180, 50, 50, byrow = TRUE)
+long <- matrix(seq(-180, 180, len = 50)*pi/180, 50, 50)
+```
+Then, define some useful variables, including x, y, and z. 
+
+```{r}
+r <- 6378.1 # radius of Earth in km
+x <- r*cos(lat)*cos(long)
+y <- r*cos(lat)*sin(long)
+z <- r*sin(lat)
+```
+
+Open a window for our creation (optional) and use the function persp3d() to draw a globe. 
+
+```{r}
+open3d()
+persp3d(x, y, z, col = "white", 
+       texture = system.file("textures/worldsmall.png", package = "rgl"), 
+       specular = "black", axes = FALSE, box = FALSE, xlab = "", ylab = "", zlab = "",
+       normal_x = x, normal_y = y, normal_z = z)
+```
+
+Animate our globe. 
+
+```{r}
+if (!rgl.useNULL())
+  play3d(spin3d(axis = c(0, 0, 1), rpm = 16), duration = 2.5)
+```
+
+
+## {plotly} package
+
+Plotly is an R package that helps you create interactive web-based graphs and 3D surfaces.
+
+You can install the package from CRAN.
+```{r}
+#install.packages("plotly")
+```
+
+Or you can install the latest from Github. 
+```{r}
+#devtools::install_github("ropensci/plotly")
+```
+You must have R v.3.2.0 for these installs to work. 
+
+```{r}
+library(plotly)
+```
+
+### Generalized format for basic plotting in R
+
+> plot_ly( x , y ,type,mode,color,size )
+
+Where:
+* size= values for same length as x, y and z that represents the size of datapoints or lines in plot.
+* x =  values for x-axis
+* y = values for y-axis
+* type = to specify the plot that you want to create like “histogram”, “surface” , “box”, etc.
+* mode = format in which you want data to be represented in the plot. Possible values are “markers”, “lines, “points”.
+* color = values of same length as x, y and z that represents the color of datapoints or lines in plot.
+
+
+This line of code will add the layout fields, like plot title axis title/ labels, axis title/ label fonts,  etc.
+
+> layout(plot ,title , xaxis = list(title ,titlefont ), yaxis = list(title ,titlefont ))
+
+Where:
+* plot = the plotly object to be displayed
+* title = string containing the title of the plot
+* xaxis : title = title/ label for x-axis
+* xaxis : titlefont = font for title/ label of x-axis
+* yaxis : title = title/ label for y-axis
+* yaxis : titlefont = font for title/ label of y-axis
+
+Let's run through an example with the iris dataset we've been using: 
+
+### Basic visualizations
+
+Here are some basic functions that plotly enables you to do: 
+* hovering your mouse over the plot to view associated attributes
+* selecting a particular region on the plot using your mouse to zoom
+* resetting the axis
+* rotating the 3D images
+
+#### an interactive histogram 
+```{r}
+#attaching the variables
+attach(iris)
+
+#plotting a histogram with Sepal.Length variable and storing it in hist
+hist<-plot_ly(x=Sepal.Length,type='histogram')
+
+#defining labels and title using layout()
+layout(hist,title = "Iris Dataset - Sepal.Length",
+xaxis = list(title = "Sepal.Length"),
+yaxis = list(title = "Count"))
+
+hist
+```
+
+#### an interactive box plot
+```{r}
+#plotting a Boxplot with Sepal.Length variable and storing it in box_plot
+box_plot<-plot_ly(y=Sepal.Length,type='box',color=Species)
+
+#defining labels and title using layout()
+layout(box_plot,title = "Iris Dataset - Sepal.Length Boxplot",
+yaxis = list(title = "Sepal.Length"))
+
+box_plot
+```
+
+#### an interactive scatter plot
+
+```{r}
+#plotting a Scatter Plot with Sepal.Length and Sepal.Width variables and storing it in scatter_plot1
+scatter_plot1<-plot_ly(x=Sepal.Length,y=Sepal.Width,type='scatter',mode='markers')
+
+#defining labels and titile using layout()
+layout(scatter_plot1,title = "Iris Dataset - Sepal.Length vs Sepal.Width",
+xaxis = list(title = "Sepal.Length"),
+yaxis = list(title = "Sepal.Width"))
+```
+
+##### Let’s go a step further and add another dimension (Species) using color.
+
+```{r}
+#plotting a Scatter Plot with Sepal.Length and Sepal.Width variables with color representing the Species and storing it in scatter_plot12
+scatter_plot2<-plot_ly(x=Sepal.Length,y=Sepal.Width,type='scatter', mode='markers', color = Species)
+
+#defining labels and titile using layout()
+layout(scatter_plot2,title = "Iris Dataset - Sepal.Length vs Sepal.Width", 
+       xaxis = list(title = "Sepal.Length"),
+       yaxis = list(title = "Sepal.Width"))
+```
+Although data frames can be thought of as the central object in this package, plotly visualizations don’t actually require a data frame. This makes chart types that accept a z argument especially easy to use if you have a numeric matrix. 
+
+##### We can even add another dimension (Petal Length) to the plot by using the size of each data point in the plot.
+```{r}
+#plotting a Scatter Plot with Sepal.Length and Sepal.Width variables with color represneting the Species and size representing the Petal.Length. Then, storing it in scatter_plot3
+scatter_plot3<-plot_ly(x=Sepal.Length,y=Sepal.Width,type='scatter',mode='markers',color = Species,size=Petal.Length)
+
+#defining labels and titles using layout()
+layout(scatter_plot3,title = "Iris Dataset - Sepal.Length vs Sepal.Width",
+       xaxis = list(title = "Sepal.Length"),
+       yaxis = list(title = "Sepal.Width"))
+```
+
+#### An interactive time series plot - CHANGE THIS TO IRIS DATASET?
+```{r}
+##plotting a Boxplot with Sepal.Length variable and storing it in box_plot
+#time_seies<-plot_ly(x=time(AirPassengers),y=AirPassengers,type="scatter",mode="lines")
+
+#defining labels and titile using layout()
+#layout(time_seies,title = "AirPassengers Dataset - Time Series Plot",
+#xaxis = list(title = "Time"),
+#yaxis = list(title = "Passengers"))
+```
+
+```{r}
+p <- plot_ly(z = volcano, type = "surface")
+p
+```
+
+### A "simple" example using plot_ly
+
+By default, Plotly runs locally in your web browser or R Studio viewer. Simply printing the Plotly object will render the chart locally in your web browser or in the R Studio viewer.
+
+```{r}
+p <- plot_ly(midwest, x = ~percollege, color = ~state, type = "box")
+p
+```
+Plotly graphs are interactive. Click on legend entries to toggle traces, click-and-drag on the chart to zoom, double-click to autoscale, shift-and-drag to pan.
+
+
+### Interactive plots using GGPLOT
+
+Plotly also has a ggplot converter that turns ggplot2 plots into interactive, web-based plots. 
+
+```{r}
+#set.seed(100)
+#d <- diamonds[sample(nrow(diamonds), 1000), ]
+#p <- plot_ly(d, x=carat, y=price, text=paste("Clarity:", clarity), 
+#             mode="markers", color=carat, size=carat)
+#p 
+```
+
+```{r}
+# p <- ggplot(data = d, aes(x = carat, y = price)) +
+#   geom_point(aes(text = paste("Clarity:", clarity)), size = 4) +
+#   geom_smooth(aes(colour = cut, fill = cut)) + facet_wrap(~ cut)
+#  
+# gg <- ggplotly(p)
+# gg
+```
+Hover to see data, click and drag to zoom, or double-click to autoscale.
+
+## Getting Started in Geometric Morphometrics in R using the Geomorph R Package {.tabset}
+
+I followed [this link](file:///Volumes/Julie17/Quick_Guide_to_Geomorph-3.0.pdf) heavily for general geomorph proceedings. 
+
+To install geomorph from CRAN:
+```{r}
+# install.packages("geomorph", dependencies = TRUE)
+```
+
+This will install the latest version of geomorph from CRAN https://cran.rstudio.com/.
+
+CRAN restricts the number of updates package maintainers can make in a year. Occasionally, bugs slip
+through that need to be fixed immediately. We maintain a “Stable” version of the current CRAN version of geomorph in our GitHub repository, which can be installed as source.
+
+To install the source package from GitHub:
+
+```{r}
+#install.packages("devtools", dependencies = TRUE)
+#devtools::install_github("geomorphR/geomorph",ref = "Stable")
+```
+
+
+To load the package: 
+```{r}
+#library(geomorph)
+```
+
+You’ll notice that a black warning message is printed in the console saying the package rgl and ape are also loaded. All of the 3D plots of interactive functions of geomorph are run through rgl https://cran.r-project.org/web/packages/rgl/index.html. ape is called for several phylogenetic analyses.
+
+
+### Exploring sample data from Geomorph: 
+
+There are 12 datasets included with geomorph: plethodon, scallops, hummingbirds, larvalTails, larvalMorph, mosquito, ratland, plethspecies, plethShapeFood, pupfish, motionpaths and scallopPLY. 
+
+It is advised to run and examine these example datasets before performing own analyses in order to understand how a function and its options work.
+
+To load an example dataset:
+
+```{r}
+#data(plethodon)
+#attributes(plethodon)
+
+##explore these data
+#head(plethodon$land[,,1])
+#head(plethodon$links)
+#plethodon$species
+#plethodon$site
+#head(plethodon$outline)
+
+```
+
+### Collecting Landmarks
+
+#### Important Requirements for Landmarks
+
+Remember the following requirements for landmarks:
+a. Each image must have the same number of landmarks;
+b. The landmarks on each image must be in the same order;
+c. Landmarks are ordinarily placed on homologous points, points that can be
+replicated from object to object based on common morphology, common
+function, or common geometry;
+d. You may have to flip some images so that are not reversed left to right (e.g., if
+most of your images show the right side, flip left side images so that they
+mimic right side)
+
+#### Collecting landmark coordinates with ImageJ. 
+
+[ImageJ – open-source software for image processing](http://rsbweb.nih.gov/ij/download.html)
+[Point Picker plugin for ImageJ](http://bigwww.epfl.ch/thevenaz/pointpicker/)
+
+##### Installing Point Picker: 
+
+Point Picker is an interactive ImageJ plugin that allows storage and retrieval of a collection of landmarks
+
+Mac OS X
+1. Download the install image
+2. Open the PointPicker.dmg
+3. Copy the folder PointPicker to Applications -> ImageJ -> Plugins
+Windows
+1. Download the installation package
+2. Unzip it
+3. Copy the folder PointPicker to C:/Program Files/ImageJ/Plugins
+
+
+##### Collecting landmarks in ImageJ:
+
+[This user guide on digitizing in ImageJ](http://www.indiana.edu/~g562/Handouts/Collecting%20Landmarks.pdf) is really helpful. 
+
+To collect landmarks using ImageJ
+1. Place all your images in a single folder by themselves
+2. Start ImageJ
+3. open the first image
+
+Repeat the following steps for each image
+4. Start the PointPicker plugin: Plugins -> PointPicker -> PointPicker
+Choose the pen tool (the one with a +) to add points
+6. Carefully place each of your points on the image, always in the same order. If you need to adjust the position, choose the move tool
+7. When all points are placed, click the output button (the one with a piece of paper as the icon). Use the Show option.
+8. Highlight all the data, copy it, paste it into Excel with one blank line above, and one blank line below
+9. The x and y coordinates of your points are in the 2nd and 3rd columns.
+10. Above the x-coordinates, enter the text "LM=" followed by the number of points (e.g. LM=5)
+11. Below the x-coordinates, enter the text "ID=" followed by the taxon name (e.g. ID=Archaeopteryx)
+12. Clear the data window (by closing or clicking the red circle (MAC))
+13. Click the Return to ImageJ button (microscope icon)
+14. Open next image
+15. Repeat from Step 4 until all images are finished
+
+##### Save the landmarks in TPS format
+1. In Excel, highlight columns 2 & 3 from the first “LM=13” to the last
+“ID=Ateleaspis_tesselatai” and copy. For this lab that should be 165 rows with
+two columns.
+2. In Word, use Paste Special to paste these rows as plain text. If you don’t paste
+as plain text then you will have trouble importing the data into Mathematica.
+3. Save the Word document as plain text somewhere convenient.
+
+#### Collecting landmark coordinates with R. 
+
+We can digitize 2D landmarks on .jpg files using the digitize2d function in Geomorph. 
+
+[This user guide](https://rdrr.io/cran/geomorph/man/digitize2d.html) is really helpful for this. 
+Also see 15.1 in [this user guide](file:///Volumes/Julie17/Quick_Guide_to_Geomorph-3.0.pdf). 
+
+The user provides a list of image names, the number of landmarks to be digitized, and the name of an output TPS file. An option is included to allow the user to digitize a scale on each image to convert the landmark coordinates from pixels into meaningful units. Landmarks to be digitized can include both fixed landmarks and semi-landmarks, the latter of which are to be designated as "sliders" for subsequent analysis (see the function define.sliders).
+
+```{r}
+#digitize2d(filelist, nlandmarks, scale = NULL, tpsfile, MultScale = FALSE, verbose = TRUE)
+```
+
+filelist = list of names of jpeg images to be digitized
+nlandmarks = number of landmarks to be digitized
+scale = a vector containing the length of the scale to be placed on each image (eg. 10 for 10mm)
+tpsfile = the name of a TPS file to be created or read
+Multscale = a logical option indicating if the coordinates should be pre-multiplied by scale
+verbose = logical. user decides whether to digitize in verbose or silent format. default is verbose. 
+
+##### The Digitizing Session
+
+Digitizing landmarks from 2D photos requires that a scale bar is placed in the image in order to scale the coordinate data. The 'scale' option requires: a single number (e.g. 10) which means that the scale to be measured in all images is a 10mm scale bar; OR a vector the same length as the filelist containing a number for the scale of each image. If scale=NULL, then the digitized coordinates will not be scaled. This option is NOT recommended.
+
+Users may digitize all specimens in one session, or may return at a later time to complete digitizing. In the latter case, the user provides the same filelist and TPS file and the function will determine where the user left off.
+
+If specimens have missing landmarks, these can be incorporated during the digitizing process using the 'a' option as described below (a=absent).
+
+##### Specimen Digitizing
+
+Digitizing landmarks involves landmark selection using a mouse in the plot window, using the LEFT mouse button (or regular button for Mac users):
+
+Digitize the scale bar (if requested) by selecting the two end points. Use a single click for start and end points. The user is asked whether the system should keep or discard the digitized scale bar.
+Digitize each landmark with single click and the landmark is shown in red.
+If verbose = TRUE, digitizing is interactive between landmark selection using a mouse and the R console. Once a landmark is selected, the user is asked if the system should keep or discard the selection (y/n/a). If "y", the user is asked to continue to select the next landmark. If "n", the user is asked to select it again.
+
+To digitize a missing landmark, simply click on any location in the image. Then, when prompted to keep selection, choose 'a' (for absent). Missing landmarks can only be included during the digitizing process when verbose=TRUE.
+
+If verbose = FALSE the digitizing of landmarks is continuous and uninterrupted. Here the user will not be prompted to approve each landmark selection.
+
+At the end of digitizing, the landmark coordinates are written to a TPS file. By default, the x,y values are unscaled if a vector of scales is included, and the scale is returned on line SCALE= after each specimen x,y data. Optionally, one may have the coordinates pre-multiplied by scale by using the option MultScale=TRUE.
+
+##### Value from digitized2d: 
+
+Function returns a tps file containing the digitized landmark coordinates.
+
+#### Importing landmark data into R
+
+Whether you used R or ImageJ to collect digitized landmark coordinates, you can use R to import those landmark data: 
+
+Landmark data brought into R can be in a variety of formats. Our functions can deal with the most common:
+tps files, nts files, and morphologicka files. 
+
+The following section describes how to use these functions on these files. 
+
+At the end, we describe how data brought in as a simple excel-style matrix can be imported and manipluated into the correct format.
+
+All of these functions return a 3D array, which is the preferred data format for landmark data.
+
+```{r}
+#readland.tps(file, specID = c("None", "ID", "imageID"), readcurves = FALSE, warnmsg = TRUE)
+```
+
+Arguments
+* file A .tps file containing two- or three-dimensional landmark data
+* specID a character specifying whether to extract the specimen ID names from the ID or IMAGE lines
+(default is “None”)
+* readcurves A logical value stating whether CURVES= field and associated coordinate data will be read as
+semilandmarks (TRUE) or ignored (FALSE)
+* warnmsg A logical value stating whether warnings should be printed
+
+This function reads a .tps file containing two- or three-dimensional landmark coordinates for a set of specimens.
+Tps files are text files in one of the standard formats for geometric morphometrics (see Rohlf 2010). Twodimensional
+landmarks coordinates are designated by the identifier “LM=”, while three-dimensional data are
+designated by “LM3=”. Landmark coordinates are multiplied by their scale factor if this is provided for all
+specimens. If one or more specimens are missing the scale factor (there is no line “SCALE=”), landmarks are
+treated in their original units.
+
+The name of the specimen can be given in the tps file by “ID=” (use specID=”ID”) or “IMAGE=” (use
+specID= “imageID”), otherwise the function defaults to specID= “None”.
+
+If there are curves defined in the file (i.e., CURVES= fields), the option readcurves should be used. When
+readcurves = TRUE, the coordinate data for the curves will be returned as semilandmarks and will be
+appended to the fixed landmark data. Then the user needs to use define.sliders to create a matrix designating
+how the curve points will slide (used by ‘curves=’ in gpagen). When readcurves = FALSE, only the landmark
+data are returned (the curves are ignored).
+
+At present, all other information that can be contained in tps files (comments, variables, radii, etc.) is ignored.
+
+#### Data inspection:
+
+##### Plot landmark coordinates for all specimens (plotAllSpecimens)
+Function plots landmark coordinates for a set of specimens.
+
+```{r}
+#plotAllSpecimens(A, mean = TRUE, links = NULL, label = FALSE, plot.param = list())
+```
+Arguments
+• A A 3D array (p x k x n) containing GPA-aligned coordinates for a set of specimens
+• mean A logical value indicating whether the mean shape should be included in the plot
+• links An optional matrix defining for links between landmarks
+• pointscale An optional value defining the size of the points for all specimens
+• meansize An optional value defining the size of the points representing the average specimen
+The function creates a plot of the landmark coordinates for all specimens. This is useful for examining
+patterns of shape variation after GPA. If “mean=TRUE”, the mean shape will be calculated and added to
+the plot. Additionally, if a matrix of links is provided, the landmarks of the mean shape will be connected
+by lines. The link matrix is an m x 2 matrix, where m is the desired number of links. Each row of the link
+matrix designates the two landmarks to be connected by that link. The function will plot either two- or
+three-dimensional data.
+
+Example for 2D data: 
+
+```{r}
+
+#Y.gpa<-gpagen(plethodon$land, print.progress = FALSE) # GPA
+#plethodon$links
+
+#plotAllSpecimens(Y.gpa$coords,links=plethodon$links,label=T,
+#plot.param = list(pt.bg = "green", mean.cex=1, link.col="red",txt.pos=3, txt.cex=1))
+
+```
+
+Example for 3D data: 
+
+```{r}
+
+#data(scallops)
+#Y.gpa <- gpagen(A=scallops$coorddata, curves=scallops$curvslide, surfaces=scallops$surfslide, print.progress = FALSE)
+#scallinks <- matrix(c(1,rep(2:16, each=2),1), nrow=16, byrow=TRUE) # make links matrix
+#plotAllSpecimens(Y.gpa$coords,links=scallinks, plot.param= list(pt.bg = "blue",link.col="red"))
+
+```
+
